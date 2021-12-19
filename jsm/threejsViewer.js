@@ -1,6 +1,6 @@
-import * as THREE from "/threejs/build/three.module.js";
-import { MarchingCubes } from '/threejs/examples/jsm/objects/MarchingCubes.js'
-import { OrbitControls } from '/threejs/examples/jsm/controls/OrbitControls.js'
+import * as THREE from "./../threejs/build/three.module.js";
+import { MarchingCubes } from './../threejs/examples/jsm/objects/MarchingCubes.js'
+import { OrbitControls } from './../threejs/examples/jsm/controls/OrbitControls.js'
 
 class threejsViewer {
     constructor(domElement) {
@@ -57,7 +57,7 @@ class threejsViewer {
             scope.renderer.render(scope.scene, scope.camera);
         }
 
-        //µøµ¡ÅÜ°Ê®É ¡A§ó·sµe¥¬¤j¤p¥H¤Î¬Û¾÷(§ë¼v¯x°})Ã¸»sªº¤ñ¨Ò
+        //è¦–çª—è®Šå‹•æ™‚ ï¼Œæ›´æ–°ç•«å¸ƒå¤§å°ä»¥åŠç›¸æ©Ÿ(æŠ•å½±çŸ©é™£)ç¹ªè£½çš„æ¯”ä¾‹
         window.addEventListener('resize', () => {
             //update render canvas size
             let width = domElement.clientWidth
