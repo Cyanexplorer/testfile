@@ -1,8 +1,8 @@
-import * as THREE from "../build/three.module.js";
+import * as THREE from "../threejs/build/three.module.js";
 import { InputModule } from '../jsm/inputModule.js'
 import { HSV, LittleTriangle } from '../jsm/hsv.js'
 
-// three.js UI±±¨î¤¸¥ó³]¸m
+// three.js UIæ§åˆ¶å…ƒä»¶è¨­ç½®
 class ControlView  extends THREE.EventDispatcher{
 
     constructor(domElement, arg) {
@@ -19,7 +19,7 @@ class ControlView  extends THREE.EventDispatcher{
         let inputInstance = InputModule.getInstance(arg)
         let changeEvent = {type:'change'}
 
-        //´è¬V¶¶§Ç
+        //æ¸²æŸ“é †åº
         const UILayer = 1
         const contentLayer = 2
         const textLayer = 3
@@ -41,7 +41,7 @@ class ControlView  extends THREE.EventDispatcher{
             this.updateRGBA()
         }
 
-        // ¹ï­«½Æ¼Ò«¬ÀË¬d¥H¤Î¦A§Q¥Î
+        // å°é‡è¤‡æ¨¡å‹æª¢æŸ¥ä»¥åŠå†åˆ©ç”¨
         let exist = function (name, mesh) {
             if (mesh instanceof THREE.Group) {
                 groupExist(name, mesh)
@@ -76,7 +76,7 @@ class ControlView  extends THREE.EventDispatcher{
 
         this.initUI = function () {
 
-            //ÀË¬d¦r«¬¬O§_¸ü¤J
+            //æª¢æŸ¥å­—å‹æ˜¯å¦è¼‰å…¥
             if (font == null) {
                 loadFont(() => {
                     this.initUI()
@@ -122,7 +122,7 @@ class ControlView  extends THREE.EventDispatcher{
             this.dispatchEvent(changeEvent)
         }
 
-        // §ó·s±±¨î­±ªO¤Wªº°Ñ¼ÆÅã¥Ü
+        // æ›´æ–°æ§åˆ¶é¢æ¿ä¸Šçš„åƒæ•¸é¡¯ç¤º
         this.updateRGBA = function () {
             const picker = hsvInstance.drawTriangle(arg.clickH / 60)
             picker.renderOrder = UILayer
@@ -153,7 +153,7 @@ class ControlView  extends THREE.EventDispatcher{
             this.dispatchEvent(changeEvent)
         }
 
-        // ¨ú±o·Æ¹«¦b«ü©wª«¥ó¤Wªº®y¼Ğ¦ì¸m
+        // å–å¾—æ»‘é¼ åœ¨æŒ‡å®šç‰©ä»¶ä¸Šçš„åº§æ¨™ä½ç½®
         let getPosition = function (evt) {
             let canvas = evt.target
             let rect = canvas.getBoundingClientRect()
@@ -168,7 +168,7 @@ class ControlView  extends THREE.EventDispatcher{
             renderer.render(scene, camera)
         }
 
-        // ¸ü¤J¦r«¬ÀÉ¡A¨Ñthree.jsÃ¸»s¤å¦r
+        // è¼‰å…¥å­—å‹æª”ï¼Œä¾›three.jsç¹ªè£½æ–‡å­—
         let loadFont = function (onload) {
             new THREE.FontLoader().load('./../resources/fonts/gentilis_regular.typeface.json', (f) => {
                 font = f		            
@@ -177,7 +177,7 @@ class ControlView  extends THREE.EventDispatcher{
             })
         }
 
-        // ¹«¼Ğ¥ªÁäÂIÀ»¨Æ¥ó
+        // é¼ æ¨™å·¦éµé»æ“Šäº‹ä»¶
         domElement.addEventListener('mousedown', (evt) => {
             evt.preventDefault()
 
@@ -190,9 +190,9 @@ class ControlView  extends THREE.EventDispatcher{
             this.updateRGBA()
         })
 
-        // ¹«¼Ğ¥kÁäÂIÀ»¨Æ¥ó
+        // é¼ æ¨™å³éµé»æ“Šäº‹ä»¶
         domElement.addEventListener('contextmenu', (evt) => {
-            evt.preventDefault()//«Ì½ª¥kÁä¿ï³æ
+            evt.preventDefault()//å±è”½å³éµé¸å–®
 
             if (evt.buttons != 0 || evt.button != 2) {
                 return
@@ -203,11 +203,11 @@ class ControlView  extends THREE.EventDispatcher{
             this.updateRGBA()
         })
 
-        // ¹«¼Ğ²¾°Ê¨Æ¥ó
+        // é¼ æ¨™ç§»å‹•äº‹ä»¶
         domElement.addEventListener('mousemove', (evt) => {
             evt.preventDefault()
 
-            // «Ì½ª¥ªÁäÂIÀ»¥H¥~ªº¨Æ¥ó
+            // å±è”½å·¦éµé»æ“Šä»¥å¤–çš„äº‹ä»¶
             if (evt.buttons != 1 || evt.button != 0) {
                 return
             }
@@ -235,7 +235,7 @@ class ControlView  extends THREE.EventDispatcher{
         let directionalLight = new THREE.DirectionalLight(0xffffff, 1);
         scene.add(directionalLight)
 
-        // ¸ü¤JTF¤å¥ó(¦â¶¥³]¸m)¶i¦æªì©l³]¸m
+        // è¼‰å…¥TFæ–‡ä»¶(è‰²éšè¨­ç½®)é€²è¡Œåˆå§‹è¨­ç½®
         let request = new XMLHttpRequest()
         request.open('GET', "./../resources/tf/test.tf", true)
         //request.responseType = 'blob'
