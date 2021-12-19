@@ -1,5 +1,5 @@
 import * as THREE from "./../threejs/build/three.module.js";
-import { VolumeRenderShader1 } from './../resources/shader/VolumeShader.js'
+import { VolumeRenderShader1 } from './shader/VolumeShader.js'
 import { OrbitControls } from './../threejs/examples/jsm/controls/OrbitControls.js'
 
 class threejsViewer {
@@ -67,7 +67,7 @@ class threejsViewer {
             this.renderer.render(this.scene, this.camera);
         }
 
-        //µøµ¡ÅÜ°Ê®É ¡A§ó·sµe¥¬¤j¤p¥H¤Î¬Û¾÷(§ë¼v¯x°})Ã¸»sªº¤ñ¨Ò
+        //è¦–çª—è®Šå‹•æ™‚ ï¼Œæ›´æ–°ç•«å¸ƒå¤§å°ä»¥åŠç›¸æ©Ÿ(æŠ•å½±çŸ©é™£)ç¹ªè£½çš„æ¯”ä¾‹
         window.addEventListener('resize', () => {
             //update render canvas size
             let width = window.innerWidth
@@ -104,12 +104,12 @@ class threejsViewer {
             return { min: min, max: max }
         }
 
-        //¥ÑÂI®y¼Ğ¥Í¦¨¼Ò«¬
+        //ç”±é»åº§æ¨™ç”Ÿæˆæ¨¡å‹
         /**
          * 
-         * @param {any} dims: ¸ê®Æªººû«×
-         * @param {any} vertices: ÂI®y¼Ğ°}¦C¡A¥Hunsigned int arrayÀx¦s
-         * @param {any} vertexCount: °}¦C±Æ§Çªº³æ¦ì¶q¡A³q±`¥H3µ§¸ê®Æ¥Í¦¨¤@­Ó¸`ÂI
+         * @param {any} dims: è³‡æ–™çš„ç¶­åº¦
+         * @param {any} vertices: é»åº§æ¨™é™£åˆ—ï¼Œä»¥unsigned int arrayå„²å­˜
+         * @param {any} vertexCount: é™£åˆ—æ’åºçš„å–®ä½é‡ï¼Œé€šå¸¸ä»¥3ç­†è³‡æ–™ç”Ÿæˆä¸€å€‹ç¯€é»
          */
         this.loadModelfromVertices = function (dims, vertices, meshCount) {
             let scaleSize = 1 / getMinMax(dims).min
@@ -143,7 +143,7 @@ class threejsViewer {
             }
         }
 
-        //¥Ñ¼v¹³¸ê®Æ¥Í¦¨¼Ò«¬
+        //ç”±å½±åƒè³‡æ–™ç”Ÿæˆæ¨¡å‹
         this.renderVolume = function (volume, colormap) {
 
             const name = 'volume'
@@ -156,7 +156,7 @@ class threejsViewer {
                 // THREE.Mesh
                 const geometry = new THREE.BoxGeometry(dims[0] / max, dims[1] / max, dims[2] / max)
 
-                // shader¥H(0,0,0)¬°°_ÂI¡A¼Ò«¬»İ»P¤§¹ï¨ä¥HÁ×§K¯¾²z´è¬V¿ù»~
+                // shaderä»¥(0,0,0)ç‚ºèµ·é»ï¼Œæ¨¡å‹éœ€èˆ‡ä¹‹å°å…¶ä»¥é¿å…ç´‹ç†æ¸²æŸ“éŒ¯èª¤
                 geometry.translate(dims[0] / max / 2, dims[1] / max / 2, dims[2] / max / 2)
 
                 // Material
@@ -177,7 +177,7 @@ class threejsViewer {
                 texture.magFilter = THREE.LinearFilter;
                 //texture.unpackAlignment = 1;
 
-                //³sµ²shader°Ñ¼Æ
+                //é€£çµshaderåƒæ•¸
                 uniforms["u_data"].value = texture;
                 uniforms["u_size"].value.set(dims[0] / max, dims[1] / max, dims[2] / max);
                 uniforms["u_transerfunction"].value = cmtextures;
@@ -194,7 +194,7 @@ class threejsViewer {
                 mesh.name = name
                 //mesh.scale.set(1 / max, 1 / max, 1 / max)
 
-                // ¸m¤¤³B²z
+                // ç½®ä¸­è™•ç†
                 mesh.rotation.set(-Math.PI / 2, 0, Math.PI / 2)
                 mesh.position.set(0.5, 0, 0.5)
                 this.scene.add(mesh)
@@ -207,7 +207,7 @@ class threejsViewer {
                 uniforms["u_transerfunction"].value.needsUpdate = true
             }
 
-            // ¥[¤Jsize based transfer functionªº­pºâµ²ªG
+            // åŠ å…¥size based transfer functionçš„è¨ˆç®—çµæœ
             if (volume.used && uniforms["u_sizeEnable"].value != 1) {
                 const sizetextures = new THREE.DataTexture3D(volume.sizeData
                     , dims[0], dims[1], dims[2])
@@ -223,7 +223,7 @@ class threejsViewer {
                 uniforms["u_sizeData"].value = sizetextures
             }
             else if (volume.used) {
-                // ·ísize based transfer function¤w³Q±Ò¥Î¡A§ï¬°§ó·s¤º³¡°Ñ¼Æ
+                // ç•¶size based transfer functionå·²è¢«å•Ÿç”¨ï¼Œæ”¹ç‚ºæ›´æ–°å…§éƒ¨åƒæ•¸
                 uniforms["u_sizeData"].value.images = { data: volume.sizeData, width: dims[0], height: dims[1], depth: dims[2] }
                 uniforms["u_sizeData"].value.needsUpdate = true
             }
