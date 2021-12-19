@@ -6,8 +6,17 @@ const K = 1
 const DBL_MAX = Number.MAX_VALUE
 const D_T = 0.25
 
+// ScaleField類別會保存影像資料和相關參數
+// process()執行size based transfer function
 class ScaleField {
-
+	/**
+	 * 
+	 * @param {any} width 影像長度
+	 * @param {any} height 影像寬度
+	 * @param {any} depth 影像張數
+	 * @param {any} dataBuffer 像素值
+	 * @param {any} rgba (ControlSetting)色彩映射表
+	 */
 	constructor(width, height, depth, dataBuffer, rgba) {
 		this.dims = new Uint16Array([width, height, depth])
 		this.rgba = rgba
@@ -32,14 +41,14 @@ class ScaleField {
 			this.volumeData[2] = temp
 		}
 
-		this.laplacian = function (x, y, z, t) {
+		this.laplacian = function(x, y, z, t) {
 			let wh = this.dims[1] * this.dims[0]
 			let vol = this.volumeData[t]
 			let index = x * wh + y * this.dims[0] + z
 			let sum = (-6) * vol[index]
+			
 
-
-			if ((x - 1) >= 0) {
+			if ((x - 1) >= 0 ) {
 				sum += vol[index - wh]
 			}
 			else {
@@ -84,7 +93,7 @@ class ScaleField {
 			return Math.abs(sum)
 		}
 
-		this.scaleDetection = function (index, t) {
+		this.scaleDetection = function(index, t) {
 			if (this.t[index] == (N - 1) && this.laplacianValue[1][index] > this.laplacianValue[0][index] && this.laplacianValue[1][index] > this.laplacianValue[2][index])
 				this.t[index] = t - 1.0;
 
@@ -101,13 +110,13 @@ class ScaleField {
 				temp = 1.0;
 			else if (temp < 0.0)
 				temp = 0.0;
-
+			
 			temp = Math.pow(temp, 4);
 
 			return temp * (((4 * d) / h) + 1.0);
 		}
 
-		this.dotInterp = function (temp, x, y, z) {
+		this.dotInterp = function(temp, x, y, z) {
 			let index = x * (this.dims[1]) * (this.dims[0]) + y * (this.dims[0]) + z;
 			//console.log(this.alpha[index], index)
 			if (this.rgba[3][this.alpha[index]] > 0) {
@@ -137,7 +146,7 @@ class ScaleField {
 			}
 		}
 
-		this.interp = function () {
+		this.interp = function(){
 			sizeMax = 0.0;
 			sizeMin = DBL_MAX;
 
@@ -155,13 +164,31 @@ class ScaleField {
 					this.sizeData[i] = ((temp[i] - sizeMin) * 255.0) / diff + 0.5
 					//console.log(((temp[i] - sizeMin) * 255.0) / diff + 0.5)
 				}
-
+				
 			}
 			this.used = true;
 		}
 
 	}
 
+	process(onprogress, onload) {
+		if (!this.used) {
+			let gaussian1 = new Gaussian(1)
+			gaussian1.diff(this, (volume, progress) => {
+				if (onprogress instanceof Function) {
+					onprogress(volume, progress)
+				}
+
+				if (progress == 1) {
+					this.interp()
+					if (onload instanceof Function) {
+						onload()
+					}
+				}
+			})
+		}
+
+	}
 }
 
 class Gaussian {
@@ -208,7 +235,7 @@ class Gaussian {
 						dotOffset = iStep + jStep + k;
 						coeffOffset = i * size2 + j * size + k;
 						vol2[dotIndex] += phi(vol1[dotIndex + dotOffset] - vol1[dotIndex]) * (coeff[coeffIndex + coeffOffset]);
-
+						
 						sum += (coeff[coeffIndex + coeffOffset]);
 					}
 				}
@@ -220,7 +247,7 @@ class Gaussian {
 			vol2[dotIndex] = vol2[dotIndex] * (dt) + vol1[dotIndex];
 		}
 
-		this.compCoeff = function (t) {
+		this.compCoeff = function(t) {
 			let i, j, k
 			let n = (size - 1) / 2
 			let index = 0
@@ -263,7 +290,7 @@ class Gaussian {
 					}
 				}
 			}
-			onload(tmp, 2 / N)
+			onload(tmp, 2/N )
 			//console.log("iteration: 2\n");
 
 			let loop = function (t) {
@@ -288,7 +315,7 @@ class Gaussian {
 					setTimeout(() => {
 						loop(t)
 					}, 5)
-				}
+                }
 			}
 			loop(2)
 		}

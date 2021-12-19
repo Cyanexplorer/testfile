@@ -1,8 +1,8 @@
-import * as THREE from "../threejs/build/three.module.js";
-import { InputModule } from '../jsm/inputModule.js'
-import { HSV, LittleTriangle } from '../jsm/hsv.js'
+import * as THREE from "./../threejs/build/three.module.js";
+import { InputModule } from './../jsm/inputModule.js'
+import { HSV, LittleTriangle } from './../jsm/hsv.js'
 
-// three.js UIæ§åˆ¶å…ƒä»¶è¨­ç½®
+// three.js UI±±¨î¤¸¥ó³]¸m
 class ControlView  extends THREE.EventDispatcher{
 
     constructor(domElement, arg) {
@@ -19,21 +19,23 @@ class ControlView  extends THREE.EventDispatcher{
         let inputInstance = InputModule.getInstance(arg)
         let changeEvent = {type:'change'}
 
-        //æ¸²æŸ“é †åº
+        //´è¬V¶¶§Ç
         const UILayer = 1
         const contentLayer = 2
         const textLayer = 3
 
-        this.updateVolumeData = function (data, width, height, depth) {
+        this.updateVolumeData = function (volume) {
 
-            for (let i = 0; i < 256; i++) {
-                arg.histogram[i] = 0;
-            }
+            let width = volume.dims[0]
+            let height = volume.dims[1]
+            let depth = volume.dims[2]
 
-            for (let i = 0; i < depth; i++) {
-                for (let j = 0; j < height; j++) {
-                    for (let k = 0; k < width; k++) {
-                        arg.histogram[data[i * width * height + j * width + k]]++;
+            arg.histogram.fill(0)
+
+            for (let i = 0, wh = width * height; i < depth; i++) {
+                for (let j = 0, iStep = i * wh; j < height; j++) {
+                    for (let k = 0, jStep = j * width; k < width; k++) {
+                        arg.histogram[volume.alpha[iStep + jStep + k]]++;
                     }
                 }
             }
@@ -41,7 +43,7 @@ class ControlView  extends THREE.EventDispatcher{
             this.updateRGBA()
         }
 
-        // å°é‡è¤‡æ¨¡å‹æª¢æŸ¥ä»¥åŠå†åˆ©ç”¨
+        // ¹ï­«½Æ¼Ò«¬ÀË¬d¥H¤Î¦A§Q¥Î
         let exist = function (name, mesh) {
             if (mesh instanceof THREE.Group) {
                 groupExist(name, mesh)
@@ -76,7 +78,7 @@ class ControlView  extends THREE.EventDispatcher{
 
         this.initUI = function () {
 
-            //æª¢æŸ¥å­—å‹æ˜¯å¦è¼‰å…¥
+            //ÀË¬d¦r«¬¬O§_¸ü¤J
             if (font == null) {
                 loadFont(() => {
                     this.initUI()
@@ -121,7 +123,39 @@ class ControlView  extends THREE.EventDispatcher{
 
             this.dispatchEvent(changeEvent)
         }
-        
+
+        // §ó·s±±¨î­±ªO¤Wªº°Ñ¼ÆÅã¥Ü
+        this.updateRGBA = function () {
+            const picker = hsvInstance.drawTriangle(arg.clickH / 60)
+            picker.renderOrder = UILayer
+
+            const histogramContent = hsvInstance.drawRainbow(arg.rgba)
+            histogramContent.renderOrder = contentLayer
+
+            const histogramSample = hsvInstance.drawColorSample(arg.rgba)
+            histogramSample.renderOrder = contentLayer
+            
+            const alphaPath = hsvInstance.drawPath(arg.path)
+            alphaPath.renderOrder = textLayer
+
+            const markers = hsvInstance.updateLittleTriangle(arg.mylist, arg.clickTriangle)
+            markers.renderOrder = textLayer
+
+            const logview = hsvInstance.drawLog(arg.histogram)
+            markers.renderOrder = contentLayer
+
+            exist('picker', picker)
+            exist('hContent', histogramContent)
+            exist('hSample', histogramSample)
+            exist('alpha', alphaPath)
+            exist('markers', markers)
+            exist('log', logview)
+            renderScene()
+            
+
+            this.dispatchEvent(changeEvent)
+        }
+
         this.loadTfFile = function (text) {
             
             let output = text.replace('\r', ' ').replace('\n', ' ').replace(/\s\s+/g, ' ').split(' ')
@@ -148,38 +182,7 @@ class ControlView  extends THREE.EventDispatcher{
             this.updateRGBA()
         }
 
-        // æ›´æ–°æ§åˆ¶é¢æ¿ä¸Šçš„åƒæ•¸é¡¯ç¤º
-        this.updateRGBA = function () {
-            const picker = hsvInstance.drawTriangle(arg.clickH / 60)
-            picker.renderOrder = UILayer
-
-            const histogramContent = hsvInstance.drawRainbow(arg.rgba)
-            histogramContent.renderOrder = contentLayer
-
-            const histogramSample = hsvInstance.drawColorSample(arg.rgba)
-            histogramSample.renderOrder = contentLayer
-
-            const alphaPath = hsvInstance.drawPath(arg.path)
-            alphaPath.renderOrder = textLayer
-
-            const markers = hsvInstance.updateLittleTriangle(arg.mylist, arg.clickTriangle)
-            markers.renderOrder = textLayer
-
-            const logview = hsvInstance.drawLog(arg.histogram)
-            markers.renderOrder = contentLayer
-
-            exist('picker', picker)
-            exist('hContent', histogramContent)
-            exist('hSample', histogramSample)
-            exist('alpha', alphaPath)
-            exist('markers', markers)
-            exist('log', logview)
-            renderScene()
-
-            this.dispatchEvent(changeEvent)
-        }
-
-        // å–å¾—æ»‘é¼ åœ¨æŒ‡å®šç‰©ä»¶ä¸Šçš„åº§æ¨™ä½ç½®
+        // ¨ú±o·Æ¹«¦b«ü©wª«¥ó¤Wªº®y¼Ğ¦ì¸m
         let getPosition = function (evt) {
             let canvas = evt.target
             let rect = canvas.getBoundingClientRect()
@@ -194,7 +197,7 @@ class ControlView  extends THREE.EventDispatcher{
             renderer.render(scene, camera)
         }
 
-        // è¼‰å…¥å­—å‹æª”ï¼Œä¾›three.jsç¹ªè£½æ–‡å­—
+        // ¸ü¤J¦r«¬ÀÉ¡A¨Ñthree.jsÃ¸»s¤å¦r
         let loadFont = function (onload) {
             new THREE.FontLoader().load('./resources/fonts/gentilis_regular.typeface.json', (f) => {
                 font = f		            
@@ -203,7 +206,7 @@ class ControlView  extends THREE.EventDispatcher{
             })
         }
 
-        // é¼ æ¨™å·¦éµé»æ“Šäº‹ä»¶
+        // ¹«¼Ğ¥ªÁäÂIÀ»¨Æ¥ó
         domElement.addEventListener('mousedown', (evt) => {
             evt.preventDefault()
 
@@ -216,9 +219,9 @@ class ControlView  extends THREE.EventDispatcher{
             this.updateRGBA()
         })
 
-        // é¼ æ¨™å³éµé»æ“Šäº‹ä»¶
+        // ¹«¼Ğ¥kÁäÂIÀ»¨Æ¥ó
         domElement.addEventListener('contextmenu', (evt) => {
-            evt.preventDefault()//å±è”½å³éµé¸å–®
+            evt.preventDefault()//«Ì½ª¥kÁä¿ï³æ
 
             if (evt.buttons != 0 || evt.button != 2) {
                 return
@@ -229,11 +232,11 @@ class ControlView  extends THREE.EventDispatcher{
             this.updateRGBA()
         })
 
-        // é¼ æ¨™ç§»å‹•äº‹ä»¶
+        // ¹«¼Ğ²¾°Ê¨Æ¥ó
         domElement.addEventListener('mousemove', (evt) => {
             evt.preventDefault()
 
-            // å±è”½å·¦éµé»æ“Šä»¥å¤–çš„äº‹ä»¶
+            // «Ì½ª¥ªÁäÂIÀ»¥H¥~ªº¨Æ¥ó
             if (evt.buttons != 1 || evt.button != 0) {
                 return
             }
@@ -261,7 +264,7 @@ class ControlView  extends THREE.EventDispatcher{
         let directionalLight = new THREE.DirectionalLight(0xffffff, 1);
         scene.add(directionalLight)
 
-        // è¼‰å…¥TFæ–‡ä»¶(è‰²éšè¨­ç½®)é€²è¡Œåˆå§‹è¨­ç½®
+        // ¸ü¤JTF¤å¥ó(¦â¶¥³]¸m)¶i¦æªì©l³]¸m
         let request = new XMLHttpRequest()
         request.open('GET', "./resources/tf/test.tf", true)
         //request.responseType = 'blob'
