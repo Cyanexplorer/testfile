@@ -1,0 +1,221 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <meta name='viewport' content='width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0'>
+    <style>
+        input[type=file] {
+            display: none;
+        }
+
+        .labelLayout {
+            width: 100%;
+            display: flex;
+            color: white;
+            margin-top:10px;
+        }
+
+        .labelInput {
+            flex: 1 1 auto;
+            align-self: baseline;
+        }
+
+        .frostedGlass {
+            border-radius: 20px;
+            overflow: hidden;
+            background-color: rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px)
+        }
+
+        .btnLabel {
+            background-color: lightgray;
+            padding: 8px;
+            margin: 2px;
+            border-radius: 4px;
+            text-align:center;
+            flex-basis:auto;
+            flex-grow: 1;
+            flex-shrink: 1;
+        }
+
+        .btnLabel:hover {
+            background-color: gray;
+        }
+
+        .controlPanel {
+            max-height: 1000px;
+            display: flex;
+            flex-direction: column;
+            position: absolute;
+            align-items: center;
+            right: 0px;
+            top: 0px;
+        }
+
+        .panelHeader {
+            color: white;
+            text-align: center;
+        }
+
+        #palette {
+            width: 400px;
+            margin: 20px;
+        }
+
+        .saveSpace {
+            width: 100%;
+            height: 20px;
+        }
+
+        #closeBtn {
+            background-color: lightgray;
+            text-align: center;
+            width: 100%;
+            user-select: none;
+            -moz-user-select: none;
+            -webkit-user-select: none;
+        }
+
+        #closeBtn:hover {
+            background-color: darkgray;
+        }
+
+        .settingForm {
+            display: flex;
+            flex-wrap: wrap;
+            padding-top: 10px;
+            padding-bottom: 10px;
+            justify-content: center;
+        }
+
+        .close {
+            max-height: 0px;
+            overflow: hidden;
+            transform-origin: top;
+            -webkit-transform-origin: top;
+            -moz-transform-origin: top;
+            transition: max-height 0.8s ease-in-out;
+            -webkit-transition: max-height 0.8s ease-in-out;
+            -moz-transition: max-height 0.8s ease-in-out;
+        }
+
+        .open {
+            max-height: 100vh;
+            transform-origin: top;
+            -webkit-transform-origin: top;
+            -moz-transform-origin: top;
+            transition: max-height 0.8s ease-in-out;
+            -webkit-transition: max-height 0.8s ease-in-out;
+            -moz-transition: max-height 0.8s ease-in-out;
+        }
+
+        .noDisplay{
+            display:none
+        }
+
+    </style>
+</head>
+<body style="padding:0px;margin:0px;width:100vw;height:100vh">
+    <div id="controlPanel" class="controlPanel frostedGlass" data-collapsed="false">
+
+        <!--標題-->
+        <div class="panelHeader saveSpace">Control Panel</div>
+
+        <!--內容-->
+        <div class="panelContent open">
+            <div class="settingForm">
+                <label class="btnLabel"><input type="file" name="settingForm" accept=".raw">load RAW</label>
+                <label class="btnLabel" name="settingForm">save Model</label>
+            </div>
+
+            <!--閥值-->
+            <div class="labelLayout">
+                <label for="isovalueSlider">閥值:0/0</label>
+                <input class="labelInput" id="isovalueSlider" type="range" name="settingForm" min=0 max=1000>
+            </div>
+
+            <!--紋理-->
+            <div class="labelLayout">
+                <label>Texture:</label>
+                <select class="labelInput" name="settingForm">
+                    <option value=0 selected>option 1</option>
+                    <option value=1>option 2</option>
+                </select>
+            </div>
+
+            <!--框線-->
+            <div class="labelLayout">
+                <label for="lineEnable">PolyLine:</label>
+                <input class="labelInput" id="lineEnable" type="checkbox" name="settingForm"/>
+            </div>
+            <div id="palette"></div>
+        </div>
+
+        <!--收合按鈕-->
+        <div id="closeBtn" class="saveSpace">close</div>
+
+    </div>
+
+    <script type="module">
+
+        import { threejsViewer } from './jsm/threejsViewer.js'
+        import { PLYExporter } from "./examples/jsm/exporters/PlyExporter.js";
+
+        const fileRegex = /(\w+)_(\d+)x(\d+)x(\d+)_(\w+)\.*/;
+        
+        let modelView = new threejsViewer(document.body)// webgl畫布
+
+        function init() {
+
+            // 收合按鈕:點擊事件設置
+            let closeBtn = document.getElementById('closeBtn')
+            let controlPanel = document.getElementById('controlPanel')
+            let content = controlPanel.getElementsByClassName('panelContent')[0]
+            closeBtn.addEventListener('click', function (evt) {
+                evt.preventDefault()
+
+                if (controlPanel.dataset.collapsed == 'true') {
+                    content.classList.remove('close')
+                    content.classList.add('open')
+                    controlPanel.dataset.collapsed = false
+                }
+                else {
+                    content.classList.add('close')
+                    content.classList.remove('open')
+                    controlPanel.dataset.collapsed = true
+                }
+            })
+
+            let elements = document.getElementsByName('settingForm')
+
+            // RAW文件讀取
+            elements[0].addEventListener('change', (evt) => {
+                
+            })
+
+            // 模型資料下載
+            elements[1].addEventListener('click', (evt) => {
+
+            })
+
+            // 閥值設定
+            elements[2].addEventListener('click', (evt) => {
+
+            })
+
+            // 紋理設置
+            elements[3].addEventListener('change', (evt) => {
+
+            })
+
+            // 模型網格顯示
+            elements[4].addEventListener('change', (evt) => {
+
+            })
+        }
+        
+        window.onload = init
+    </script>
+
+</body>
+</html>
