@@ -1,6 +1,6 @@
-import * as THREE from "../build/three.module.js";
-import { VolumeRenderShader1 } from '../examples/jsm/shaders/VolumeShader.js'
-import { OrbitControls } from '../examples/jsm/controls/OrbitControls.js'
+import * as THREE from "../threejs/build/three.module.js";
+import { VolumeRenderShader1 } from '../threejs/examples/jsm/shaders/VolumeShader.js'
+import { OrbitControls } from '../threejs/examples/jsm/controls/OrbitControls.js'
 
 class threejsViewer {
     constructor(domElement) {
@@ -62,7 +62,7 @@ class threejsViewer {
         this.scene.add(sphere);
         */
 
-        // ¨ü¨î©ó°}¦C¤j¤p¡AMath.max/minµLªkº¡¨¬³Ì¤j/³Ì¤p­È·j´Mªº»İ¨D¡A»İ­n¤â°Ê¹ê§@¤U¦C¨ç¦¡
+        // å—åˆ¶æ–¼é™£åˆ—å¤§å°ï¼ŒMath.max/minç„¡æ³•æ»¿è¶³æœ€å¤§/æœ€å°å€¼æœå°‹çš„éœ€æ±‚ï¼Œéœ€è¦æ‰‹å‹•å¯¦ä½œä¸‹åˆ—å‡½å¼
         let getMinMax = function (dataBuffer) {
             if (dataBuffer.length <= 0) {
                 return { min: 0, max: 0 }
@@ -92,10 +92,10 @@ class threejsViewer {
         }
 
         /**
-         * ¥ÑÂI®y¼Ğ¥Í¦¨¼Ò«¬
-         * @param {any} dims: ¸ê®Æªººû«×
-         * @param {any} vertices: ÂI®y¼Ğ°}¦C¡A¥Hunsigned byte arrayÀx¦s
-         * @param {any} vertexCount: °}¦C±Æ§Çªº³æ¦ì¶q¡A³q±`¥H3µ§¸ê®Æ¥Í¦¨¤@­Ó¸`ÂI
+         * ç”±é»åº§æ¨™ç”Ÿæˆæ¨¡å‹
+         * @param {any} dims: è³‡æ–™çš„ç¶­åº¦
+         * @param {any} vertices: é»åº§æ¨™é™£åˆ—ï¼Œä»¥unsigned byte arrayå„²å­˜
+         * @param {any} vertexCount: é™£åˆ—æ’åºçš„å–®ä½é‡ï¼Œé€šå¸¸ä»¥3ç­†è³‡æ–™ç”Ÿæˆä¸€å€‹ç¯€é»
          */
         this.loadModelfromVertices = function (dims, vertices, meshCount) {
             let scaleSize = 1 / getMinMax(dims).min
@@ -122,7 +122,7 @@ class threejsViewer {
             this.scene.add(mesh)
         }
 
-        // ²¾°£«ü©w¦WºÙªºª«¥ó
+        // ç§»é™¤æŒ‡å®šåç¨±çš„ç‰©ä»¶
         this.clearModel = function () {
             let mesh = this.scene.getObjectByName('volume')
             if (mesh != null) {
