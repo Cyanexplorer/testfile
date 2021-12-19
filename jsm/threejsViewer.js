@@ -1,6 +1,6 @@
-import * as THREE from "./../threejs/build/three.module.js";
-import { MarchingCubes } from './../threejs/examples/jsm/objects/MarchingCubes.js'
-import { OrbitControls } from './../threejs/examples/jsm/controls/OrbitControls.js'
+import * as THREE from "/threejs/build/three.module.js";
+import { MarchingCubes } from '/threejs/examples/jsm/objects/MarchingCubes.js'
+import { OrbitControls } from '/threejs/examples/jsm/controls/OrbitControls.js'
 
 class threejsViewer {
     constructor(domElement) {
