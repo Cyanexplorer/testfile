@@ -170,7 +170,7 @@ class ControlView  extends THREE.EventDispatcher{
 
         // 載入字型檔，供three.js繪製文字
         let loadFont = function (onload) {
-            new THREE.FontLoader().load('resources/fonts/gentilis_regular.typeface.json', (f) => {
+            new THREE.FontLoader().load('./resources/fonts/gentilis_regular.typeface.json', (f) => {
                 font = f		            
 
                 onload()
@@ -237,7 +237,7 @@ class ControlView  extends THREE.EventDispatcher{
 
         // 載入TF文件(色階設置)進行初始設置
         let request = new XMLHttpRequest()
-        request.open('GET', "./../resources/tf/test.tf", true)
+        request.open('GET', "./resources/tf/test.tf", true)
         //request.responseType = 'blob'
         request.onload = () => {
             if (request.readyState == 4 && request.status == 200) {
