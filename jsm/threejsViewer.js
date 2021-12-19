@@ -1,5 +1,5 @@
 import * as THREE from "./../threejs/build/three.module.js";
-import { VolumeRenderShader1 } from './shader/VolumeShader.js'
+import { VolumeRenderShader1 } from './VolumeShader.js'
 import { OrbitControls } from './../threejs/examples/jsm/controls/OrbitControls.js'
 
 class threejsViewer {
