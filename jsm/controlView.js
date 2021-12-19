@@ -121,6 +121,32 @@ class ControlView  extends THREE.EventDispatcher{
 
             this.dispatchEvent(changeEvent)
         }
+        
+        this.loadTfFile = function (text) {
+            
+            let output = text.replace('\r', ' ').replace('\n', ' ').replace(/\s\s+/g, ' ').split(' ')
+            for (let i = 0; i < 256; i++) {
+                arg.path[i] = parseInt(output[4 * i])
+                arg.rgba[0][i] = parseFloat(output[4 * i + 1])
+                arg.rgba[1][i] = parseFloat(output[4 * i + 2])
+                arg.rgba[2][i] = parseFloat(output[4 * i + 3])
+                arg.rgba[3][i] = parseFloat(arg.path[i]) / 180
+            }
+
+            arg.clickTriangle = null;
+            arg.mylist = new Array();
+
+            for (let i = 256 * 4; i < parseInt(output.length / 4) * 4; i += 4) {
+                let t = new LittleTriangle();
+                t.x = parseInt(output[i])
+                t.hsv.H = parseFloat(output[i + 1])
+                t.hsv.S = parseFloat(output[i + 2])
+                t.hsv.V = parseFloat(output[i + 3])
+                arg.mylist.push(t);
+            }
+
+            this.updateRGBA()
+        }
 
         // 更新控制面板上的參數顯示
         this.updateRGBA = function () {
