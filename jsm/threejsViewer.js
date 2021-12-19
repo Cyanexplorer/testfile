@@ -1,14 +1,9 @@
-import * as THREE from "../threejs/build/three.module.js";
-import { MarchingCubes } from '../threejs/examples/jsm/objects/MarchingCubes.js'
-import { OrbitControls } from '../threejs/examples/jsm/controls/OrbitControls.js'
+import * as THREE from "../build/three.module.js";
+import { VolumeRenderShader1 } from '../examples/jsm/shaders/VolumeShader.js'
+import { OrbitControls } from '../examples/jsm/controls/OrbitControls.js'
 
 class threejsViewer {
     constructor(domElement) {
-        this.size = 0
-        this.databuffer = null
-        this.textureOption = 0
-        this.threshold = 75
-        this.enableLine = false
 
         let width = domElement.clientWidth;
         let height = domElement.clientHeight;
@@ -23,21 +18,28 @@ class threejsViewer {
         this.scene = new THREE.Scene();
 
         // Camera
-        let aspect = window.innerWidth / window.innerHeight;
+        let unit = 1
+        let ratio = width / height * unit
 
-        this.camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 50);
-        this.camera.position.set(2, 1, 2)
+        this.camera = new THREE.OrthographicCamera(-ratio, ratio, unit, - unit, 0.01, 100);
+        this.camera.position.set(8, 4, 8)
         this.scene.add(this.camera)
 
         // Light
         let directionalLight = new THREE.DirectionalLight(0xffffff, 1)
-        directionalLight.position.set(2, 1, 2)   
+        directionalLight.position.set(2, 1, 2)
+        
         this.scene.add(directionalLight)
+        this.scene.add(new THREE.HemisphereLight(0x443333, 0x111122))
 
         // Controller
         let controller = new OrbitControls(this.camera, this.renderer.domElement)
         controller.target.set(0, 0.5, 0)
         controller.update()
+
+        controller.addEventListener('change', () => {
+            this.renderScene()
+        })
         
         //Axis Landmark
         const axesHelper = new THREE.AxesHelper(100)
@@ -46,28 +48,87 @@ class threejsViewer {
         // Ground
         const plane = new THREE.Mesh(
             new THREE.CircleGeometry(2, 30),
-            new THREE.MeshPhongMaterial({ color: 0xbbddff, opacity:0.4, transparent: true })
+            new THREE.MeshPhongMaterial({ color: 0xbbddff, side: THREE.DoubleSide, opacity:0.4, transparent: true })
         );
         plane.rotation.x = - Math.PI / 2;
         this.scene.add(plane);
 
-        let scope = this
-        this.renderScene = function () {
-            requestAnimationFrame(scope.renderScene)
-            scope.renderer.render(scope.scene, scope.camera);
+        /*
+        const sphere = new THREE.Mesh(
+            new THREE.SphereBufferGeometry(10, 20, 10),
+            new THREE.MeshPhongMaterial({ color: 0xffffff, side: THREE.BackSide })
+        );
+        sphere.rotation.x = - Math.PI / 2;
+        this.scene.add(sphere);
+        */
+
+        // ¨ü¨î©ó°}¦C¤j¤p¡AMath.max/minµLªkº¡¨¬³Ì¤j/³Ì¤p­È·j´Mªº»Ý¨D¡A»Ý­n¤â°Ê¹ê§@¤U¦C¨ç¦¡
+        let getMinMax = function (dataBuffer) {
+            if (dataBuffer.length <= 0) {
+                return { min: 0, max: 0 }
+            }
+            else if (dataBuffer.length == 1) {
+                return { min: dataBuffer[0], max: dataBuffer[0] }
+            }
+
+            let min = dataBuffer[0]
+            let max = dataBuffer[0]
+            for (let i = 0; i < dataBuffer.length; i++) {
+                if (dataBuffer[i] > max) {
+                    max = dataBuffer[i]
+                }
+                if (dataBuffer[i] < min) {
+                    min = dataBuffer[i]
+                }
+            }
+
+            return { min: min, max: max }
         }
 
-        //è¦–çª—è®Šå‹•æ™‚ ï¼Œæ›´æ–°ç•«å¸ƒå¤§å°ä»¥åŠç›¸æ©Ÿ(æŠ•å½±çŸ©é™£)ç¹ªè£½çš„æ¯”ä¾‹
-        window.addEventListener('resize', () => {
-            //update render canvas size
-            let width = domElement.clientWidth
-            let height = domElement.clientHeight
-            this.renderer.setSize(width, height);
+        this.renderScene = function() {
 
-            //update camera project aspect
-            this.camera.aspect = width / height
-            this.camera.updateProjectionMatrix();
-        })
+            //render scene
+            this.renderer.render(this.scene, this.camera);
+        }
+
+        /**
+         * ¥ÑÂI®y¼Ð¥Í¦¨¼Ò«¬
+         * @param {any} dims: ¸ê®Æªººû«×
+         * @param {any} vertices: ÂI®y¼Ð°}¦C¡A¥Hunsigned byte arrayÀx¦s
+         * @param {any} vertexCount: °}¦C±Æ§Çªº³æ¦ì¶q¡A³q±`¥H3µ§¸ê®Æ¥Í¦¨¤@­Ó¸`ÂI
+         */
+        this.loadModelfromVertices = function (dims, vertices, meshCount) {
+            let scaleSize = 1 / getMinMax(dims).min
+
+            const geometry = new THREE.BufferGeometry()
+            geometry.setAttribute('position', new THREE.BufferAttribute(vertices, meshCount));
+            geometry.translate(-dims[0] / 2, -dims[1] / 2, -dims[2] / 2)
+            geometry.computeVertexNormals()
+
+            let mesh = this.scene.getObjectByName('model')
+
+            if (mesh != null && mesh instanceof THREE.Object3D) {
+                mesh.geometry = geometry
+            }
+            else {
+                const material = new THREE.MeshStandardMaterial({ color: 0x0055ff, flatShading: true, side: THREE.DoubleSide });
+                mesh = new THREE.Mesh(geometry, material)
+                mesh.name = 'model'
+            }
+
+            mesh.position.set(0, dims[1] * scaleSize / 2, 0)
+            mesh.scale.set(scaleSize, scaleSize, scaleSize)
+            
+            this.scene.add(mesh)
+        }
+
+        // ²¾°£«ü©w¦WºÙªºª«¥ó
+        this.clearModel = function () {
+            let mesh = this.scene.getObjectByName('volume')
+            if (mesh != null) {
+                this.scene.remove(mesh)
+            }
+        }
 
         this.renderScene()
     }

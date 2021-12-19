@@ -8,18 +8,6 @@
             display: none;
         }
 
-        .labelLayout {
-            width: 100%;
-            display: flex;
-            color: white;
-            margin-top:10px;
-        }
-
-        .labelInput {
-            flex: 1 1 auto;
-            align-self: baseline;
-        }
-
         .frostedGlass {
             border-radius: 20px;
             overflow: hidden;
@@ -59,6 +47,7 @@
 
         #palette {
             width: 400px;
+            height: 600px;
             margin: 20px;
         }
 
@@ -125,29 +114,11 @@
         <!--內容-->
         <div class="panelContent open">
             <div class="settingForm">
-                <label class="btnLabel"><input type="file" name="settingForm" accept=".raw">load RAW</label>
-                <label class="btnLabel" name="settingForm">save Model</label>
-            </div>
-
-            <!--閥值-->
-            <div class="labelLayout">
-                <label for="isovalueSlider">閥值:0/0</label>
-                <input class="labelInput" id="isovalueSlider" type="range" name="settingForm" min=0 max=1000>
-            </div>
-
-            <!--紋理-->
-            <div class="labelLayout">
-                <label>Texture:</label>
-                <select class="labelInput" name="settingForm">
-                    <option value=0 selected>option 1</option>
-                    <option value=1>option 2</option>
-                </select>
-            </div>
-
-            <!--框線-->
-            <div class="labelLayout">
-                <label for="lineEnable">PolyLine:</label>
-                <input class="labelInput" id="lineEnable" type="checkbox" name="settingForm" />
+                <label class="btnLabel"><input type="file" name="settingForm" accept=".raw">load .raw</label>
+                <label class="btnLabel"><input type="file" name="settingForm" accept=".tf">load .tf</label>
+                <label class="btnLabel" name="settingForm">save .tf</label>
+                <label class="btnLabel noDisplay"><input type="file" name="settingForm">saveData</label>
+                <label class="btnLabel noDisplay" name="settingForm">sized based</label>
             </div>
             <div id="palette"></div>
         </div>
@@ -156,7 +127,7 @@
         <div id="closeBtn" class="saveSpace">close</div>
 
     </div>
-    <script src="js/scoreoutputer.min.js"></script>
+    <script src="/js/scoreoutputer.min.js"></script>
     <script>
         // 建構子 ScoreOutputer 接受一個字串，該字串為 csv 的檔案名稱
         var so = new ScoreOutputer("109114514");
@@ -171,10 +142,9 @@
             //有幾個項目就呼叫幾個 addChild
             //addChild 要比 renderModal 先呼叫
             so.addChild("讀取文件並顯示資訊", 4, true);
-            so.addChild("生成模型", 2, true);
-            so.addChild("閥值控制", 2, false);
-            so.addChild("文件下載", 1, false);
-            so.addChild("材質更換", 1, false);
+            so.addChild("mip渲染", 2, true);
+            so.addChild("iso渲染", 2, false);
+            so.addChild("調色盤變更紋理", 2, false);
 
             //產生自評表，參數如下所示
             so.renderModal(
@@ -206,12 +176,27 @@
     </script>
     <script type="module">
 
+        import { ScaleField } from './jsm/scaleField.js'
         import { threejsViewer } from './jsm/threejsViewer.js'
-        import { PLYExporter } from "./threejs/examples/jsm/exporters/PLYExporter.js";
+        import { ControlView, colorSetting } from './jsm/controlView.js'
 
+        // 檔名正規語言判定規則
         const fileRegex = /(\w+)_(\d+)x(\d+)x(\d+)_(\w+)\.*/;
 
-        let modelView = new threejsViewer(document.body)// webgl畫布
+        let controlView = null// 控制面板
+        let modelView = null// webgl畫布
+        let arg = new colorSetting()// 控制面板參數設置
+
+        let getColormap = function () {
+            let color = new Uint8ClampedArray(256 * 4)
+            for (let i = 0; i < 256; i++) {
+                color[4 * i] = arg.rgba[0][i] * 256
+                color[4 * i + 1] = arg.rgba[1][i] * 256
+                color[4 * i + 2] = arg.rgba[2][i] * 256
+                color[4 * i + 3] = arg.rgba[3][i] * 256
+            }
+            return color
+        }
 
         function init() {
 
@@ -241,28 +226,28 @@
 
             })
 
-            // 模型資料下載
-            elements[1].addEventListener('click', (evt) => {
+            // TF文件(色階設置)讀取
+            elements[1].addEventListener('change', (evt) => {
 
             })
 
-            // 閥值設定
+            // TF文件(色階設置)下載
             elements[2].addEventListener('click', (evt) => {
-
-            })
-
-            // 紋理設置
-            elements[3].addEventListener('change', (evt) => {
-
-            })
-
-            // 模型網格顯示
-            elements[4].addEventListener('change', (evt) => {
 
             })
         }
 
-        window.onload = init
+        window.onload = () => {
+            modelView = new threejsViewer(document.body)
+            controlView = new ControlView(document.getElementById('palette'), arg)
+
+            // 控制面板參數調整時，可觸發事件
+            controlView.addEventListener('change', () => {
+
+            })
+
+            init()
+        }
     </script>
 
 </body>
