@@ -170,7 +170,7 @@ class ControlView  extends THREE.EventDispatcher{
 
         // 載入字型檔，供three.js繪製文字
         let loadFont = function (onload) {
-            new THREE.FontLoader().load('./../resources/fonts/gentilis_regular.typeface.json', (f) => {
+            new THREE.FontLoader().load('resources/fonts/gentilis_regular.typeface.json', (f) => {
                 font = f		            
 
                 onload()
