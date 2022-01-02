@@ -101,6 +101,19 @@
         .noDisplay{
             display:none
         }
+        
+        .radioSpace {
+            width: 100%;
+            display: flex;
+        }
+
+        .radioSpace label {
+            background-color: lightgrey;
+            border-radius: 5px;
+            margin: 5px;
+            flex: 1 1 0;
+            text-align: center
+        }
 
     </style>
 </head>
@@ -119,6 +132,10 @@
                 <label class="btnLabel" name="settingForm">save .tf</label>
                 <label class="btnLabel noDisplay"><input type="file" name="settingForm">saveData</label>
                 <label class="btnLabel noDisplay" name="settingForm">sized based</label>
+            </div>
+            <div class="radioSpace">
+                <label><input type="radio" name="rtype" value="mips" checked>MIPS</label>
+                <label><input type="radio" name="rtype" value="iso">ISO</label>
             </div>
             <div id="palette"></div>
         </div>
@@ -234,6 +251,13 @@
             // TF文件(色階設置)下載
             elements[2].addEventListener('click', (evt) => {
 
+            })
+            
+            // 渲染模式(MIPS/ISO)設置
+            document.querySelectorAll('input[name=rtype]').forEach((option) => {
+                option.addEventListener('click', (evt) => {
+                    
+                })
             })
         }
 
