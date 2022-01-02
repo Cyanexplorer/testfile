@@ -288,6 +288,8 @@ class colorSetting {
         this.clickH = 0.0
         this.clickS = 1.0
         this.clickV = 1.0
+        this.renderType = 0
+        this.isovalue = 0.2
         this.cli_min = 0.0
         this.cli_max = 1.0
         for (let i = 0; i < 4; i++) {
