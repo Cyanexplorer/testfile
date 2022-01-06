@@ -1,4 +1,4 @@
-import * as THREE from '../threejs/build/three.module.js'
+import * as THREE from './../threejs/build/three.module.js'
 import { RGBType, HSVType } from './colorSpaceConvertor.js'
 
 let instance = null
@@ -20,7 +20,7 @@ class HSV {
         const WHEEL_RADIUS = 80
         const wheel_thick = 20;
 
-        // HSV èª¿è‰²è¼ª
+        // HSV ½Õ¦â½ü
         this.drawColorWheel = function () {
 
             const outline = WHEEL_RADIUS
@@ -82,7 +82,7 @@ class HSV {
             return new THREE.Mesh(geometry, material)
         }
 
-        // èª¿è‰²ç›¤(ä¸‰è§’)
+        // ½Õ¦â½L(¤T¨¤)
         this.drawTriangle = function (h) {
             const radius = WHEEL_RADIUS - wheel_thick
             let hsv = new HSVType()
@@ -190,7 +190,7 @@ class HSV {
 
             let geometry, material, vertex, group
 
-            // åˆ»åº¦
+            // ¨è«×
             if (histogramText == null) {
                 let subGroup = new THREE.Group()
 
@@ -204,7 +204,7 @@ class HSV {
             group = new THREE.Group()
             group.add(histogramText.clone())
 
-            // çµ±è¨ˆåœ–è¡¨æ¡†ç·š
+            // ²Î­p¹Ïªí®Ø½u
             vertex = new Float32Array([
                 100, 300 + 200, 0,
                 100 + 256, 300 + 200, 0,
@@ -265,7 +265,7 @@ class HSV {
             return group
         }
 
-        // ç°åº¦->è‰²éšŽçš„Alphaè®ŠåŒ–æ›²ç·š
+        // ¦Ç«×->¦â¶¥ªºAlphaÅÜ¤Æ¦±½u
         this.drawPath = function (path) {
             let vertex = new Array()
             for (let i = 0; i < 256; i++)
@@ -294,7 +294,7 @@ class HSV {
             return { min: minValue, max: maxValue}
         }
 
-        // ç°åº¦åˆ†å¸ƒçµ±è¨ˆåœ–è¡¨
+        // ¦Ç«×¤À¥¬²Î­p¹Ïªí
         this.drawLog = function (histogram) {
             let material, geometry, vertex, group, process
             group = new THREE.Group()
@@ -380,7 +380,7 @@ class HSV {
             return group
         }
 
-        // ç°åº¦->RGBAè‰²éšŽæ˜ å°„
+        // ¦Ç«×->RGBA¦â¶¥¬M®g
         this.drawColorSample = function (rgba) {
             let geometry, material, vertex, color, group
 
@@ -427,7 +427,7 @@ class HSV {
             return group
         }
 
-        // ç°åº¦->RGBè‰²éšŽæ˜ å°„
+        // ¦Ç«×->RGB¦â¶¥¬M®g
         this.drawRainbow = function (rgba) {
 
             let vertex = new Float32Array(256 * 6)
