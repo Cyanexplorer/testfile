@@ -13,11 +13,13 @@ const VolumeRenderShader1 = {
 
 	uniforms: {
 		'u_size': { value: new Vector3(1, 1, 1) },
-		'u_renderstyle': { value: 0 },
-		'u_renderthreshold': { value: 0.5 },
-		'u_clim': { value: new Vector2(1, 1) },
+		'u_renderstyle': { value: 1 },
+		'u_renderthreshold': { value: 0 },
+		'u_clim': { value: new Vector2(0, 1) },
 		'u_data': { value: null },
-		'u_cmdata': { value: null }
+		'u_cmdata': { value: null },
+		'u_sizeEnable': { value: 0 },
+		'u_sizeData': { value: null }
 	},
 
 	vertexShader: /* glsl */`
@@ -62,6 +64,10 @@ const VolumeRenderShader1 = {
 				uniform float u_renderthreshold;
 				uniform vec2 u_clim;
 
+				uniform int u_sizeEnable;
+
+				uniform sampler3D u_sizeData;
+
 				uniform sampler3D u_data;
 				uniform sampler2D u_cmdata;
 
@@ -82,6 +88,8 @@ const VolumeRenderShader1 = {
 				void cast_iso(vec3 start_loc, vec3 step, int nsteps, vec3 view_ray);
 
 				float sample1(vec3 texcoords);
+				float sample2(vec3 texcoords);
+
 				vec4 apply_colormap(float val);
 				vec4 add_lighting(float val, vec3 loc, vec3 step, vec3 view_ray);
 
@@ -137,6 +145,10 @@ const VolumeRenderShader1 = {
 						return texture(u_data, texcoords.xyz).r;
 				}
 
+				float sample2(vec3 texcoords) {
+						/* Sample float value from a 3D texture. Assumes intensity data. */
+						return texture(u_sizeData, texcoords.xyz).r;
+				}
 
 				vec4 apply_colormap(float val) {
 						val = (val - u_clim[0]) / (u_clim[1] - u_clim[0]);
@@ -158,6 +170,8 @@ const VolumeRenderShader1 = {
 										break;
 								// Sample from the 3D texture
 								float val = sample1(loc);
+								vec4 tempAlpha = texture2D(u_cmdata, vec2(val, 0.5));
+								
 								// Apply MIP operation
 								if (val > max_val) {
 										max_val = val;
@@ -178,7 +192,6 @@ const VolumeRenderShader1 = {
 						// Resolve final color
 						gl_FragColor = apply_colormap(max_val);
 				}
-
 
 				void cast_iso(vec3 start_loc, vec3 step, int nsteps, vec3 view_ray) {
 
@@ -204,8 +217,9 @@ const VolumeRenderShader1 = {
 										vec3 iloc = loc - 0.5 * step;
 										vec3 istep = step / float(REFINEMENT_STEPS);
 										for (int i=0; i<REFINEMENT_STEPS; i++) {
-												val = sample1(iloc);
+												float val = sample1(iloc);												
 												if (val > u_renderthreshold) {
+
 														gl_FragColor = add_lighting(val, iloc, dstep, view_ray);
 														return;
 												}
@@ -279,6 +293,17 @@ const VolumeRenderShader1 = {
 						// Calculate final color by componing different components
 						vec4 final_color;
 						vec4 color = apply_colormap(val);
+
+						if(u_sizeEnable == 1)
+						{
+							float size      = sample2(loc);
+							vec4 tempColor = apply_colormap(size);
+
+							tempColor.rgb  = tempColor.rgb * color.a;
+							tempColor.a = tempColor.a * color.a;
+							color =  tempColor.rgba;
+						}
+						
 						final_color = color * (ambient_color + diffuse_color) + specular_color;
 						final_color.a = color.a;
 						return final_color;

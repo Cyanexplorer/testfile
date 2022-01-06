@@ -19,11 +19,13 @@
             background-color: lightgray;
             padding: 8px;
             margin: 2px;
-            border-radius: 4px;
-            text-align:center;
-            flex-basis:auto;
-            flex-grow: 1;
-            flex-shrink: 1;
+            border-radius: 16px;
+            text-align: center;
+            width: calc(33% - 20px);
+            flex: 1 1 auto;
+            user-select: none;
+            -moz-user-select: none;
+            -webkit-user-select: none;
         }
 
         .btnLabel:hover {
@@ -71,6 +73,7 @@
 
         .settingForm {
             display: flex;
+            max-width:100%;
             flex-wrap: wrap;
             padding-top: 10px;
             padding-bottom: 10px;
@@ -102,6 +105,19 @@
             display:none
         }
 
+        .radioSpace {
+            width: 100%;
+            display: flex;
+        }
+
+        .radioSpace label {
+            background-color: lightgrey;
+            border-radius: 5px;
+            margin: 5px;
+            flex: 1 1 0;
+            text-align: center
+        }
+
     </style>
 </head>
 <body style="padding:0px;margin:0px;width:100vw;height:100vh">
@@ -115,10 +131,15 @@
         <div class="panelContent open">
             <div class="settingForm">
                 <label class="btnLabel"><input type="file" name="settingForm" accept=".raw">load .raw</label>
-                <label class="btnLabel noDisplay"><input type="file" name="settingForm" accept=".tf">load .tf</label>
-                <label class="btnLabel noDisplay" name="settingForm">save .tf</label>
-                <label class="btnLabel noDisplay"><input type="file" name="settingForm">saveData</label>
+                <label class="btnLabel"><input type="file" name="settingForm" accept=".tf">load .tf</label>
+                <label class="btnLabel"><input type="file" name="settingForm" accept=".sbdat">load .sbdat</label>
                 <label class="btnLabel" name="settingForm">sized based</label>
+                <label class="btnLabel" name="settingForm">save .tf</label>
+                <label class="btnLabel" name="settingForm">save .sbdat</label>
+            </div>
+            <div class="radioSpace">
+                <label><input type="radio" name="rtype" value="mips" checked>MIPS</label>
+                <label><input type="radio" name="rtype" value="iso">ISO</label>
             </div>
             <div id="palette"></div>
         </div>
@@ -175,28 +196,96 @@
     </script>
     <script type="module">
 
-        import { ScaleField } from './jsm/scaleField.js'
+        import { ScaleField, Gaussian } from './jsm/scaleField.js'
         import { threejsViewer } from './jsm/threejsViewer.js'
         import { ControlView, colorSetting } from './jsm/controlView.js'
 
-        // 檔名正規語言判定規則
-        const fileRegex = /(\w+)_(\d+)x(\d+)x(\d+)_(\w+)\.*/;
+        const fileRegex = /(\w+)_(\d+)_(\d+)_(\d+)_(\w+)\.*/;
 
         let field
         let controlView = null// 控制面板
         let modelView = null// webgl畫布
-        let arg = new colorSetting()// 控制面板參數設置
+        let arg = new colorSetting()
 
         let getColormap = function () {
             let color = new Uint8ClampedArray(256 * 4)
             for (let i = 0; i < 256; i++) {
-                color[4 * i] = arg.rgba[0][i] * 256
-                color[4 * i + 1] = arg.rgba[1][i] * 256
-                color[4 * i + 2] = arg.rgba[2][i] * 256
-                color[4 * i + 3] = arg.rgba[3][i] * 256
+                color[4 * i] = arg.rgba[0][i] * 255
+                color[4 * i + 1] = arg.rgba[1][i] * 255
+                color[4 * i + 2] = arg.rgba[2][i] * 255
+                color[4 * i + 3] = arg.rgba[3][i] * 255
             }
 
             return color
+        }
+
+        let getMinMax = function (dataBuffer) {
+            if (dataBuffer.length <= 0) {
+                return { min: 0, max: 0 }
+            }
+            else if (dataBuffer.length == 1) {
+                return { min: dataBuffer[0], max: dataBuffer[0] }
+            }
+
+            let min = dataBuffer[0]
+            let max = dataBuffer[0]
+            for (let i = 0; i < dataBuffer.length; i++) {
+                if (dataBuffer[i] > max) {
+                    max = dataBuffer[i]
+                }
+                if (dataBuffer[i] < min) {
+                    min = dataBuffer[i]
+                }
+            }
+
+            return { min: min, max: max }
+        }
+
+        function loadFile(dataType, raw) {
+            let dataBuffer
+
+            // 位元轉換
+            if (dataType == 'uint8') {
+                dataBuffer = new Uint8ClampedArray(raw)
+
+                let cmpSize = getMinMax(dataBuffer)
+                let min = cmpSize.min
+                let max = cmpSize.max
+
+                for (let i = 0; i < dataBuffer.length; i++) {
+                    dataBuffer[i] = (dataBuffer[i] - min) / (max - min) * 255
+                }
+            }
+            else if (dataType == 'uint16') {
+
+                // uint16 -> 16 bits -> 2 bytes: 取byteLength/2作為陣列長度
+                let data_16 = new Uint16Array(raw.byteLength / 2)
+
+                // 不同硬體對資料的處理方式分為big endian/little endian
+                // 使用dataView處理該問題
+                let dv = new DataView(raw)
+
+                for (let i = 0; i < data_16.length; i++) {
+                    data_16[i] = dv.getUint16(i * 2, false) // i * 2: 2 * i bytes
+                }
+
+                // 按比例縮放數值
+                let cmpSize = getMinMax(data_16)
+                let min = cmpSize.min
+                let max = cmpSize.max
+
+                for (let i = 0; i < data_16.length; i++) {
+                    data_16[i] = (data_16[i] - min) / (max - min) * 255
+                }
+
+                // 使用Uint8ClampedArray處理超過8bits(>256)的值
+                dataBuffer = new Uint8ClampedArray(data_16)
+            }
+            else {
+                dataBuffer = new Uint8ClampedArray(raw)
+            }
+
+            return dataBuffer
         }
 
         function init() {
@@ -222,26 +311,144 @@
 
             let elements = document.getElementsByName('settingForm')
 
+            let saveAsString = function (filename, data) {
+                let blob = new Blob([data], { type: 'text/plain' })
+
+                let downloadLink = document.createElement('a')
+                downloadLink.href = URL.createObjectURL(blob);
+                downloadLink.download = filename;
+                downloadLink.click();
+            }
+
+            let saveAsBinary = function (filename, data) {
+                let blob = new Blob([data], { type: 'application/octet-stream' })
+
+                let downloadLink = document.createElement('a')
+                downloadLink.href = URL.createObjectURL(blob);
+                downloadLink.download = filename;
+                downloadLink.click();
+            }
+
             // RAW文件讀取
             elements[0].addEventListener('change', (evt) => {
 
+                let fr = new FileReader();
+                let file = evt.target.files[0]
+
+                if (file == null) {
+                    return
+                }
+
+                let filename = file.name
+
+                let m = filename.match(fileRegex);
+                let width = parseInt(m[2])
+                let height = parseInt(m[3])
+                let depth = parseInt(m[4]);
+                let bit = m[5]
+                fr.onload = function () {
+                    evt.srcElement.value = ''
+                    let data = loadFile(bit, fr.result)
+                    field = new ScaleField(width, height, depth, data, arg.rgba)
+                    modelView.clear()
+                    controlView.updateVolumeData(field)
+                }
+                fr.readAsArrayBuffer(file);
             })
 
-            // 執行Size based transfer function
+            // TF文件(色階設置)讀取
+            elements[1].addEventListener('change', (evt) => {
+                let fr = new FileReader();
+                let file = evt.target.files[0]
+
+                if (file == null) {
+                    return
+                }
+                fr.onload = function () {
+                    evt.srcElement.value = ""
+                    controlView.loadTfFile(fr.result)
+                }
+                fr.readAsText(file)
+            })
+
+            // SBDAT文件(模型尺寸)讀取
+            elements[2].addEventListener('change', (evt) => {
+                let fr = new FileReader();
+                let file = evt.target.files[0]
+
+                if (file == null) {
+                    alert('empty file')
+                    return
+                }
+
+                fr.onload = function () {
+
+                    field.sizeData = new Uint8Array(fr.result)
+                    field.used = true
+                    modelView.renderVolume(field, getColormap(), arg)
+                    evt.srcElement.value = ""
+                }
+                fr.readAsArrayBuffer(file)
+            })
+
+            elements[3].addEventListener('click', (evt) => {
+                let onprograss = (volume, progress) => {
+                    modelView.renderVolume(volume, getColormap(), arg)
+                }
+
+                let onload = () => {
+                    modelView.renderVolume(field, getColormap(), arg)
+                }
+
+                field.process(onprograss, onload)
+            })
+
+            // TF文件(色階設置)下載
             elements[4].addEventListener('click', (evt) => {
+                let fileBuffer = ''
 
+                for (let i = 0; i < 256; i++) {
+                    fileBuffer += arg.path[i] + ' ' + arg.rgba[0][i] + ' ' + arg.rgba[1][i] + ' ' + arg.rgba[2][i] + ' '
+                }
+
+                for (let i = 0; i < arg.mylist.length; i++) {
+                    fileBuffer += arg.mylist[i].x + ' ' + arg.mylist[i].hsv.H + ' ' + arg.mylist[i].hsv.S + ' ' + arg.mylist[i].hsv.V + ' '
+                }
+
+                saveAsString('palette.tf', fileBuffer)
             })
 
 
+            // SBDAT文件(模型尺寸)下載
+            elements[5].addEventListener('click', (evt) => {
+                saveAsBinary('model.sbdat', field.sizeData)
+            })
+
+            //MIPS or ISO
+            document.querySelectorAll('input[name=rtype]').forEach((option) => {
+                option.addEventListener('click', (evt) => {
+                    let value = evt.target.value
+                    if (value == 'mips') {
+                        arg.renderType = 0
+                    }
+                    else if (value == 'iso') {
+                        arg.renderType = 1
+                    }
+                    controlView.updateRGBA()
+                })
+            })
+
+            arg.renderType = 0
         }
 
         window.onload = () => {
             modelView = new threejsViewer(document.body)
             controlView = new ControlView(document.getElementById('palette'), arg)
-
-            // 控制面板參數調整時，可觸發事件
             controlView.addEventListener('change', () => {
+                if (field != null) {
 
+                    modelView.renderVolume(field, getColormap(), arg)
+                }
             })
 
             init()

@@ -18,13 +18,10 @@ class threejsViewer {
         this.scene = new THREE.Scene();
 
         // Camera
-        let fieldOfView = 45.0;
-        let aspect = window.innerWidth / window.innerHeight;
-        let nearPlane = 0.1;
-        let farPlane = 50.0;
-
-        this.camera = new THREE.PerspectiveCamera(fieldOfView, aspect, nearPlane, farPlane);
-        this.camera.position.set(2, 1, 2)
+        let unit = 1
+        let ratio = width / height * unit
+        this.camera = new THREE.OrthographicCamera(-ratio, ratio, unit, - unit, 0.01, 100);
+        this.camera.position.set(8, 4, 8)
         this.scene.add(this.camera)
 
         // Light
@@ -67,7 +64,7 @@ class threejsViewer {
             this.renderer.render(this.scene, this.camera);
         }
 
-        //è¦–çª—è®Šå‹•æ™‚ ï¼Œæ›´æ–°ç•«å¸ƒå¤§å°ä»¥åŠç›¸æ©Ÿ(æŠ•å½±çŸ©é™£)ç¹ªè£½çš„æ¯”ä¾‹
+        //µøµ¡ÅÜ°Ê®É ¡A§ó·sµe¥¬¤j¤p¥H¤Î¬Û¾÷(§ë¼v¯x°})Ã¸»sªº¤ñ¨Ò
         window.addEventListener('resize', () => {
             //update render canvas size
             let width = window.innerWidth
@@ -104,12 +101,12 @@ class threejsViewer {
             return { min: min, max: max }
         }
 
-        //ç”±é»åº§æ¨™ç”Ÿæˆæ¨¡å‹
+        //¥ÑÂI®y¼Ğ¥Í¦¨¼Ò«¬
         /**
          * 
-         * @param {any} dims: è³‡æ–™çš„ç¶­åº¦
-         * @param {any} vertices: é»åº§æ¨™é™£åˆ—ï¼Œä»¥unsigned int arrayå„²å­˜
-         * @param {any} vertexCount: é™£åˆ—æ’åºçš„å–®ä½é‡ï¼Œé€šå¸¸ä»¥3ç­†è³‡æ–™ç”Ÿæˆä¸€å€‹ç¯€é»
+         * @param {any} dims: ¸ê®Æªººû«×
+         * @param {any} vertices: ÂI®y¼Ğ°}¦C¡A¥Hunsigned int arrayÀx¦s
+         * @param {any} vertexCount: °}¦C±Æ§Çªº³æ¦ì¶q¡A³q±`¥H3µ§¸ê®Æ¥Í¦¨¤@­Ó¸`ÂI
          */
         this.loadModelfromVertices = function (dims, vertices, meshCount) {
             let scaleSize = 1 / getMinMax(dims).min
@@ -143,71 +140,69 @@ class threejsViewer {
             }
         }
 
-        //ç”±å½±åƒè³‡æ–™ç”Ÿæˆæ¨¡å‹
-        this.renderVolume = function (volume, colormap) {
+        //¥Ñ¼v¹³¸ê®Æ¥Í¦¨¼Ò«¬
+        this.renderVolume = function (volume, colormap, arg) {
 
             const name = 'volume'
             let dims = volume.dims
             let uniforms = null
             let mesh = this.scene.getObjectByName(name)
-            let max = Math.max(...dims)
+            let scale = 1 / Math.max(...dims)
 
             if (mesh == null) {
                 // THREE.Mesh
-                const geometry = new THREE.BoxGeometry(dims[0] / max, dims[1] / max, dims[2] / max)
-
-                // shaderä»¥(0,0,0)ç‚ºèµ·é»ï¼Œæ¨¡å‹éœ€èˆ‡ä¹‹å°å…¶ä»¥é¿å…ç´‹ç†æ¸²æŸ“éŒ¯èª¤
-                geometry.translate(dims[0] / max / 2, dims[1] / max / 2, dims[2] / max / 2)
+                const geometry = new THREE.BoxGeometry(dims[0], dims[1], dims[2])
+                // shader¥H(0,0,0)¬°°_ÂI¡A¼Ò«¬»İ»P¤§¹ï¨ä¥HÁ×§K¯¾²z´è¬V¿ù»~
+                geometry.translate(dims[0] / 2, dims[1] / 2, dims[2] / 2)
 
                 // Material
                 const shader = VolumeRenderShader1;
                 uniforms = THREE.UniformsUtils.clone(shader.uniforms);
 
-                const cmtextures = new THREE.DataTexture(colormap, 256, 1, THREE.RGBAFormat)
-
+               
                 const texture = new THREE.DataTexture3D(volume.alpha
                     , dims[0], dims[1], dims[2]);
 
-                texture.format = THREE.LuminanceFormat;
+                texture.format = THREE.RedFormat;
                 texture.type = THREE.UnsignedByteType;
-                texture.wrapR = THREE.RepeatWrapping;
-                texture.wrapS = THREE.RepeatWrapping;
-                texture.wrapT = THREE.RepeatWrapping;
-                texture.minFilter = THREE.LinearFilter;
-                texture.magFilter = THREE.LinearFilter;
+                texture.minFilter = texture.magFilter = THREE.LinearFilter;
                 //texture.unpackAlignment = 1;
 
-                //é€£çµshaderåƒæ•¸
+                const cmtextures = new THREE.DataTexture(colormap, 256, 1, THREE.RGBAFormat)
+
+                //³sµ²shader°Ñ¼Æ
                 uniforms["u_data"].value = texture;
-                uniforms["u_size"].value.set(dims[0] / max, dims[1] / max, dims[2] / max);
-                uniforms["u_transerfunction"].value = cmtextures;
+                uniforms["u_size"].value.set(dims[0], dims[1], dims[2]);
+                uniforms["u_cmdata"].value = cmtextures;
                 uniforms["u_sizeEnable"].value = 0
+
+                uniforms["u_clim"].value.set(arg.cli_min, arg.cli_max);
+                uniforms["u_renderstyle"].value = arg.renderType // 0: MIP, 1: ISO
+                uniforms["u_renderthreshold"].value = arg.isovalue;
 
                 const material = new THREE.ShaderMaterial({
                     uniforms: uniforms,
                     vertexShader: shader.vertexShader,
                     fragmentShader: shader.fragmentShader,
-                    side: THREE.DoubleSide
+                    side: THREE.BackSide
                 });
 
                 mesh = new THREE.Mesh(geometry, material);
                 mesh.name = name
-                //mesh.scale.set(1 / max, 1 / max, 1 / max)
-
-                // ç½®ä¸­è™•ç†
-                mesh.rotation.set(-Math.PI / 2, 0, Math.PI / 2)
-                mesh.position.set(0.5, 0, 0.5)
+                mesh.scale.set(scale, scale, scale)
+                mesh.position.set(-dims[0] * scale / 2, 0, -dims[2] * scale / 2)
                 this.scene.add(mesh)
             }
             else {
                 uniforms = mesh.material.uniforms
                 uniforms["u_data"].value.image = { data: volume.alpha, width: dims[0], height: dims[1], depth: dims[2] }
                 uniforms["u_data"].value.needsUpdate = true
-                uniforms["u_transerfunction"].value.image = { data: colormap, width: 256, height: 1 }
-                uniforms["u_transerfunction"].value.needsUpdate = true
+                uniforms["u_renderstyle"].value = arg.renderType
+                uniforms["u_cmdata"].value.image = { data: colormap, width: 256, height: 1 }
+                uniforms["u_cmdata"].value.needsUpdate = true
             }
 
-            // åŠ å…¥size based transfer functionçš„è¨ˆç®—çµæœ
+            // ¥[¤Jsize based transfer data
             if (volume.used && uniforms["u_sizeEnable"].value != 1) {
                 const sizetextures = new THREE.DataTexture3D(volume.sizeData
                     , dims[0], dims[1], dims[2])
@@ -220,10 +215,11 @@ class threejsViewer {
                 sizetextures.magFilter = THREE.LinearFilter;
 
                 uniforms["u_sizeEnable"].value = 1
+                uniforms["u_renderstyle"].value = arg.renderType
                 uniforms["u_sizeData"].value = sizetextures
             }
             else if (volume.used) {
-                // ç•¶size based transfer functionå·²è¢«å•Ÿç”¨ï¼Œæ”¹ç‚ºæ›´æ–°å…§éƒ¨åƒæ•¸
+                uniforms["u_renderstyle"].value = arg.renderType
                 uniforms["u_sizeData"].value.images = { data: volume.sizeData, width: dims[0], height: dims[1], depth: dims[2] }
                 uniforms["u_sizeData"].value.needsUpdate = true
             }

@@ -6,17 +6,8 @@ const K = 1
 const DBL_MAX = Number.MAX_VALUE
 const D_T = 0.25
 
-// ScaleField類別會保存影像資料和相關參數
-// process()執行size based transfer function
 class ScaleField {
-	/**
-	 * 
-	 * @param {any} width 影像長度
-	 * @param {any} height 影像寬度
-	 * @param {any} depth 影像張數
-	 * @param {any} dataBuffer 像素值
-	 * @param {any} rgba (ControlSetting)色彩映射表
-	 */
+
 	constructor(width, height, depth, dataBuffer, rgba) {
 		this.dims = new Uint16Array([width, height, depth])
 		this.rgba = rgba
@@ -177,8 +168,8 @@ class ScaleField {
 			gaussian1.diff(this, (volume, progress) => {
 				if (onprogress instanceof Function) {
 					onprogress(volume, progress)
-				}
-
+                }
+				
 				if (progress == 1) {
 					this.interp()
 					if (onload instanceof Function) {
@@ -188,7 +179,7 @@ class ScaleField {
 			})
 		}
 
-	}
+    }
 }
 
 class Gaussian {

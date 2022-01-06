@@ -293,6 +293,8 @@ class colorSetting {
         this.clickV = 1.0
         this.cli_min = 0.0
         this.cli_max = 1.0
+        this.isovalue = 0.2
+        this.renderType = 1
         for (let i = 0; i < 4; i++) {
             this.rgba[i] = new Float32Array(256).fill(0)
         }
